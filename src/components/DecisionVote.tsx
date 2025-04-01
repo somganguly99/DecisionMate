@@ -15,11 +15,18 @@ export function DecisionVote({ decision }: DecisionVoteProps) {
     return (pros - cons) * weight;
   };
 
+  const calculateRatio = (option: string) => {
+    const pros = decision.pros[option]?.length || 0;
+    const cons = decision.cons[option]?.length || 0;
+    // Handle division by zero by returning pros if cons is 0
+    return cons === 0 ? pros : pros / cons;
+  };
+
   const getBestOption = () => {
     return decision.options.reduce((best, current) => {
-      const currentScore = calculateScore(current);
-      const bestScore = calculateScore(best);
-      return currentScore > bestScore ? current : best;
+      const currentRatio = calculateRatio(current);
+      const bestRatio = calculateRatio(best);
+      return currentRatio > bestRatio ? current : best;
     }, decision.options[0]);
   };
 
@@ -35,6 +42,7 @@ export function DecisionVote({ decision }: DecisionVoteProps) {
       <div className="space-y-4">
         {decision.options.map((option, index) => {
           const score = calculateScore(option);
+          const ratio = calculateRatio(option);
           const isSelected = selectedOption === option;
           const isBest = option === getBestOption();
 
@@ -58,6 +66,9 @@ export function DecisionVote({ decision }: DecisionVoteProps) {
                     <span className="text-green-600">{decision.pros[option]?.length || 0} Pros</span>
                     {' vs '}
                     <span className="text-red-600">{decision.cons[option]?.length || 0} Cons</span>
+                    <span className="ml-2 text-gray-600">
+                      (Ratio: {ratio.toFixed(2)})
+                    </span>
                   </div>
                 </div>
                 <div className="text-2xl font-bold text-indigo-600">
@@ -67,7 +78,7 @@ export function DecisionVote({ decision }: DecisionVoteProps) {
 
               {isBest && (
                 <div className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md text-sm">
-                  Recommended Choice
+                  Recommended Choice (Best Pros/Cons Ratio)
                 </div>
               )}
             </div>
