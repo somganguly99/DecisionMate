@@ -1,6 +1,5 @@
 import React from 'react';
 import { Decision } from '../types';
-import { Scale } from 'lucide-react';
 
 type DecisionMatrixProps = {
   decision: Decision;
@@ -76,16 +75,6 @@ export function DecisionMatrix({ decision, setDecision }: DecisionMatrixProps) {
     }));
   };
 
-  const handleWeightChange = (option: string, weight: number) => {
-    setDecision(prev => ({
-      ...prev,
-      weights: {
-        ...prev.weights,
-        [option]: weight
-      }
-    }));
-  };
-
   const calculateWeightedProsConsRatio = (option: string) => {
     const prosWeights = (decision.pros[option] || [])
       .filter(pro => pro.text.trim())
@@ -111,7 +100,7 @@ export function DecisionMatrix({ decision, setDecision }: DecisionMatrixProps) {
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Decision Matrix</h2>
         <p className="text-gray-600 mb-6">
-          List the pros and cons for each option, set their individual weights, and see the weighted evaluation of your choices.
+          List the pros and cons for each option and set their weights to evaluate your choices.
         </p>
       </div>
 
@@ -120,30 +109,9 @@ export function DecisionMatrix({ decision, setDecision }: DecisionMatrixProps) {
           const ratio = calculateWeightedProsConsRatio(option);
           return (
             <div key={index} className="bg-gray-50 p-6 rounded-lg">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{option || `Option ${index + 1}`}</h3>
-                <div className="flex items-center space-x-2">
-                  <Scale className="text-purple-600" size={20} />
-                  <span className="text-sm text-gray-600">Option Weight: {decision.weights[option] || 0}</span>
-                </div>
-              </div>
-
-              {/* Option Weight Slider */}
-              <div className="mb-6">
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  step="1"
-                  value={decision.weights[option] || 0}
-                  onChange={(e) => handleWeightChange(option, parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Low Priority</span>
-                  <span>High Priority</span>
-                </div>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {option || `Option ${index + 1}`}
+              </h3>
 
               {/* Weighted Pros vs Cons Percentage Bar */}
               <div className="mb-6">
