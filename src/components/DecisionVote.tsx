@@ -87,7 +87,7 @@ export function DecisionVote({ decision }: DecisionVoteProps) {
 
               {isBest && (
                 <div className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md text-sm">
-                  Recommended Choice (Best Weighted Score)
+                  Recommended Choice
                 </div>
               )}
             </div>
