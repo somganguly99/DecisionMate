@@ -7,9 +7,11 @@ import { Features } from './components/Features';
 import { DecisionCreate } from './components/DecisionCreate';
 import { DecisionMatrix } from './components/DecisionMatrix';
 import { DecisionVote } from './components/DecisionVote';
+import { SignIn } from './components/SignIn';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'create' | 'matrix' | 'vote'>('create');
+  const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [decision, setDecision] = useState<Decision>({
     title: '',
     options: [''],
@@ -20,7 +22,11 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Header 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab}
+        onSignInClick={() => setIsSignInOpen(true)}
+      />
       <Hero />
       
       <main className="flex-grow container mx-auto px-4 py-12" id="decision-maker">
@@ -28,11 +34,9 @@ function App() {
           {activeTab === 'create' && (
             <DecisionCreate decision={decision} setDecision={setDecision} />
           )}
-
           {activeTab === 'matrix' && (
             <DecisionMatrix decision={decision} setDecision={setDecision} />
           )}
-
           {activeTab === 'vote' && (
             <DecisionVote decision={decision} />
           )}
@@ -41,8 +45,13 @@ function App() {
 
       <Features />
       <Footer />
+      
+      <SignIn 
+        isOpen={isSignInOpen}
+        onClose={() => setIsSignInOpen(false)}
+      />
     </div>
   );
 }
 
-export default App
+export default App;
