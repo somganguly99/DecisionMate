@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import { Scale, ListChecks, Vote, BrainCircuit, Menu, X } from 'lucide-react';
+import React, { useState } from "react";
+import { Scale, ListChecks, Vote, BrainCircuit, Menu, X } from "lucide-react";
+import SignInButton from "./SignInButton"; // Import Google Sign-In Button
 
 type HeaderProps = {
-  activeTab: 'create' | 'matrix' | 'vote';
-  setActiveTab: (tab: 'create' | 'matrix' | 'vote') => void;
+  activeTab: "create" | "matrix" | "vote";
+  setActiveTab: (tab: "create" | "matrix" | "vote") => void;
 };
 
 export function Header({ activeTab, setActiveTab }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { id: 'create', label: 'Create', icon: ListChecks },
-    { id: 'matrix', label: 'Matrix', icon: Scale },
-    { id: 'vote', label: 'Vote', icon: Vote },
+    { id: "create", label: "Create", icon: ListChecks },
+    { id: "matrix", label: "Matrix", icon: Scale },
+    { id: "vote", label: "Vote", icon: Vote },
   ];
 
   return (
@@ -21,19 +22,21 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <BrainCircuit className="w-8 h-8 text-indigo-600" />
-            <span className="ml-2 text-xl font-semibold text-gray-900">DecisionMate</span>
+            <span className="ml-2 text-xl font-semibold text-gray-900">
+              DecisionMate
+            </span>
           </div>
-          
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-4">
             {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id as 'create' | 'matrix' | 'vote')}
+                onClick={() => setActiveTab(item.id as "create" | "matrix" | "vote")}
                 className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
                   activeTab === item.id
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 <item.icon className="w-5 h-5 mr-2" />
@@ -41,6 +44,11 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
               </button>
             ))}
           </nav>
+
+          {/* Google Sign-In Button */}
+          <div className="hidden md:block">
+            <SignInButton />
+          </div>
 
           {/* Mobile Menu Button */}
           <button
@@ -59,13 +67,13 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
                 <button
                   key={item.id}
                   onClick={() => {
-                    setActiveTab(item.id as 'create' | 'matrix' | 'vote');
+                    setActiveTab(item.id as "create" | "matrix" | "vote");
                     setIsMenuOpen(false);
                   }}
                   className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
                     activeTab === item.id
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? "bg-indigo-600 text-white"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <item.icon className="w-5 h-5 mr-2" />
@@ -73,6 +81,11 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
                 </button>
               ))}
             </nav>
+
+            {/* Google Sign-In Button in Mobile Menu */}
+            <div className="mt-4 px-4">
+              <SignInButton />
+            </div>
           </div>
         )}
       </div>
