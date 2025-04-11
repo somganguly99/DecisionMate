@@ -1,17 +1,22 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 
 const SignInButton: React.FC = () => {
-  const handleSuccess = (credentialResponse: any) => {
-    console.log("Login Success:", credentialResponse);
-    // TODO: Send token to backend for verification
+  const navigate = useNavigate();
+
+  const handleSignInClick = () => {
+    navigate('/signin');
   };
 
-  const handleError = () => {
-    console.log("Login Failed");
-  };
-
-  return <GoogleLogin onSuccess={handleSuccess} onError={handleError} />;
+  return (
+    <button
+      onClick={handleSignInClick}
+      className="flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+    >
+      Sign In
+    </button>
+  );
 };
 
 export default SignInButton;
