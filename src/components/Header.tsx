@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Scale, ListChecks, Vote, BrainCircuit, Menu, X } from "lucide-react";
-import SignInButton from "./SignInButton"; // Import Google Sign-In Button
+import { Scale, ListChecks, Vote, BrainCircuit, Menu, X, LogIn } from "lucide-react";
 
 type HeaderProps = {
   activeTab: "create" | "matrix" | "vote";
   setActiveTab: (tab: "create" | "matrix" | "vote") => void;
+  onSignInClick: () => void;
 };
 
-export function Header({ activeTab, setActiveTab }: HeaderProps) {
+export function Header({ activeTab, setActiveTab, onSignInClick }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
@@ -28,26 +28,31 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-4">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id as "create" | "matrix" | "vote")}
-                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === item.id
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <item.icon className="w-5 h-5 mr-2" />
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          {/* Google Sign-In Button */}
-          <div className="hidden md:block">
-            <SignInButton />
+          <div className="hidden md:flex items-center space-x-4">
+            <nav className="flex space-x-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as "create" | "matrix" | "vote")}
+                  className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                    activeTab === item.id
+                      ? "bg-indigo-600 text-white"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <item.icon className="w-5 h-5 mr-2" />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            
+            <button
+              onClick={onSignInClick}
+              className="flex items-center px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+            >
+              <LogIn className="w-5 h-5 mr-2" />
+              Sign In
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -80,12 +85,17 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
                   {item.label}
                 </button>
               ))}
+              <button
+                onClick={() => {
+                  onSignInClick();
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+              >
+                <LogIn className="w-5 h-5 mr-2" />
+                Sign In
+              </button>
             </nav>
-
-            {/* Google Sign-In Button in Mobile Menu */}
-            <div className="mt-4 px-4">
-              <SignInButton />
-            </div>
           </div>
         )}
       </div>
