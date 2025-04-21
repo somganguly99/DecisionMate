@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Scale, ListChecks, Vote, BrainCircuit, Menu, X, LogIn } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Scale, ListChecks, Vote, BrainCircuit, Menu, X, LogIn, LogOut } from "lucide-react";
 
 type HeaderProps = {
   activeTab: "create" | "matrix" | "vote";
@@ -9,6 +9,19 @@ type HeaderProps = {
 
 export function Header({ activeTab, setActiveTab, onSignInClick }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      setUser(JSON.parse(userStr));
+    }
+  }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('user');
+    window.location.reload();
+  };
 
   const navItems = [
     { id: "create", label: "Create", icon: ListChecks },
@@ -46,13 +59,35 @@ export function Header({ activeTab, setActiveTab, onSignInClick }: HeaderProps) 
               ))}
             </nav>
             
-            <button
-              onClick={onSignInClick}
-              className="flex items-center px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
-            >
-              <LogIn className="w-5 h-5 mr-2" />
-              Sign In
-            </button>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  {user.picture && (
+                    <img 
+                      src={user.picture} 
+                      alt={user.name} 
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                  )}
+                  <span className="text-gray-700">{user.name}</span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors"
+                >
+                  <LogOut className="w-5 h-5 mr-2" />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onSignInClick}
+                className="flex items-center px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+              >
+                <LogIn className="w-5 h-5 mr-2" />
+                Sign In
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -85,16 +120,41 @@ export function Header({ activeTab, setActiveTab, onSignInClick }: HeaderProps) 
                   {item.label}
                 </button>
               ))}
-              <button
-                onClick={() => {
-                  onSignInClick();
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
-              >
-                <LogIn className="w-5 h-5 mr-2" />
-                Sign In
-              </button>
+              {user ? (
+                <>
+                  <div className="flex items-center px-4 py-2">
+                    {user.picture && (
+                      <img 
+                        src={user.picture} 
+                        alt={user.name} 
+                        className="w-8 h-8 rounded-full mr-2"
+                      />
+                    )}
+                    <span className="text-gray-700">{user.name}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors"
+                  >
+                    <LogOut className="w-5 h-5 mr-2" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => {
+                    onSignInClick();
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                >
+                  <LogIn className="w-5 h-5 mr-2" />
+                  Sign In
+                </button>
+              )}
             </nav>
           </div>
         )}
