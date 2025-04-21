@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
+import { useNavigate } from 'react-router-dom';
 
 type SignInProps = {
   isOpen: boolean;
@@ -10,14 +11,37 @@ type SignInProps = {
 export function SignIn({ isOpen, onClose }: SignInProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Handle regular sign in
     console.log('Login attempt:', { username, password });
   };
 
-  const handleGoogleSuccess = (credentialResponse: any) => {
-    console.log('Google login success:', credentialResponse);
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      // Decode the JWT token to get user info
+      const decoded = JSON.parse(atob(credentialResponse.credential.split('.')[1]));
+      
+      // Store user info in localStorage
+      localStorage.setItem('user', JSON.stringify({
+        email: decoded.email,
+        name: decoded.name,
+        picture: decoded.picture
+      }));
+
+      // Close the modal
+      onClose();
+      
+      // Redirect to home page
+      navigate('/', { replace: true });
+      
+      // Refresh the page to update the UI
+      window.location.reload();
+    } catch (error) {
+      console.error('Error during Google sign in:', error);
+    }
   };
 
   if (!isOpen) return null;
