@@ -1,49 +1,40 @@
-import React, { useState } from 'react';
-import { Decision } from './types';
+import React, { useEffect } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import { useThemeStore } from './store/themeStore';
 import { Header } from './components/Header';
-import { Hero } from './components/Hero';
 import { Footer } from './components/Footer';
-import { Features } from './components/Features';
-import { DecisionCreate } from './components/DecisionCreate';
-import { DecisionMatrix } from './components/DecisionMatrix';
-import { DecisionVote } from './components/DecisionVote';
+import { UnderstandDecision } from './components/decision-path/UnderstandDecision';
+import { ClarifyPriorities } from './components/decision-path/ClarifyPriorities';
+import { ExploreOptions } from './components/decision-path/ExploreOptions';
+import { EvaluateOutcomes } from './components/decision-path/EvaluateOutcomes';
+import { DecisionConfidence } from './components/decision-path/DecisionConfidence';
+import { MakeDecision } from './components/decision-path/MakeDecision';
 import { SignIn } from './components/SignIn';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'create' | 'matrix' | 'vote'>('create');
-  const [isSignInOpen, setIsSignInOpen] = useState(false);
-  const [decision, setDecision] = useState<Decision>({
-    title: '',
-    options: [''],
-    pros: {},
-    cons: {},
-    weights: {},
-  });
+  const [isSignInOpen, setIsSignInOpen] = React.useState(false);
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+  }, [isDarkMode]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab}
-        onSignInClick={() => setIsSignInOpen(true)}
-      />
-      <Hero />
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      <Header onSignInClick={() => setIsSignInOpen(true)} />
       
-      <main className="flex-grow container mx-auto px-4 py-12" id="decision-maker">
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          {activeTab === 'create' && (
-            <DecisionCreate decision={decision} setDecision={setDecision} />
-          )}
-          {activeTab === 'matrix' && (
-            <DecisionMatrix decision={decision} setDecision={setDecision} />
-          )}
-          {activeTab === 'vote' && (
-            <DecisionVote decision={decision} />
-          )}
-        </div>
+      <main className="flex-grow container mx-auto px-4 py-12">
+        <Routes>
+          <Route path="/" element={<UnderstandDecision />} />
+          <Route path="/clarify-priorities" element={<ClarifyPriorities />} />
+          <Route path="/explore-options" element={<ExploreOptions />} />
+          <Route path="/evaluate-outcomes" element={<EvaluateOutcomes />} />
+          <Route path="/decision-confidence" element={<DecisionConfidence />} />
+          <Route path="/make-decision" element={<MakeDecision />} />
+        </Routes>
       </main>
 
-      <Features />
       <Footer />
       
       <SignIn 
