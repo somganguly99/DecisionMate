@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useThemeStore } from './store/themeStore';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { HeroS } from './components/Hero';
+import { Hero } from './components/Hero';
 import { UnderstandDecision } from './components/decision-path/UnderstandDecision';
 import { ClarifyPriorities } from './components/decision-path/ClarifyPriorities';
 import { ExploreOptions } from './components/decision-path/ExploreOptions';
@@ -24,7 +24,7 @@ function App() {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <Header onSignInClick={() => setIsSignInOpen(true)} />
-      <HeroS />
+      <Hero />
       <main className="flex-grow container mx-auto px-4 py-12">
         <Routes>
           <Route path="/" element={<UnderstandDecision />} />
