@@ -1,25 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
+import { useThemeStore } from '../../store/themeStore';
+import { useDecisionStore } from '../../store/decisionStore';
 
 export function ExploreOptions() {
   const navigate = useNavigate();
-  const isDarkMode = document.documentElement.classList.contains('dark');
-  const [options, setOptions] = useState(['']);
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const setOptions = useDecisionStore((state) => state.setOptions);
+  const [options, setLocalOptions] = useState(['']);
 
   const addOption = () => {
-    setOptions([...options, '']);
+    setLocalOptions([...options, '']);
   };
 
   const updateOption = (index: number, value: string) => {
     const newOptions = [...options];
     newOptions[index] = value;
-    setOptions(newOptions);
+    setLocalOptions(newOptions);
   };
 
   const removeOption = (index: number) => {
     const newOptions = options.filter((_, i) => i !== index);
-    setOptions(newOptions);
+    setLocalOptions(newOptions);
+  };
+
+  const handleNext = () => {
+    const validOptions = options.filter(opt => opt.trim() !== '');
+    if (validOptions.length > 0) {
+      setOptions(validOptions);
+      navigate('/evaluate-outcomes');
+    }
   };
 
   return (
@@ -42,7 +53,7 @@ export function ExploreOptions() {
                   isDarkMode 
                     ? 'bg-gray-700 border-gray-600 text-white' 
                     : 'bg-white border-gray-300 text-gray-900'
-                } focus:ring-2 focus:ring-indigo-500`}
+                } focus:ring-2 focus:ring-purple-500`}
                 placeholder={`Option ${index + 1}`}
               />
               {options.length > 1 && (
@@ -63,8 +74,8 @@ export function ExploreOptions() {
           onClick={addOption}
           className={`flex items-center px-4 py-2 rounded-md ${
             isDarkMode 
-              ? 'bg-gray-700 hover:bg-gray-600' 
-              : 'bg-gray-100 hover:bg-gray-200'
+              ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
           }`}
         >
           <Plus className="w-5 h-5 mr-2" />
@@ -86,8 +97,8 @@ export function ExploreOptions() {
         </button>
         
         <button
-          onClick={() => navigate('/evaluate-outcomes')}
-          className="flex items-center px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          onClick={handleNext}
+          className="flex items-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
           Next Step
           <ArrowRight className="ml-2 w-5 h-5" />
