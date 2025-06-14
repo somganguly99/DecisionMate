@@ -2,74 +2,200 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { useThemeStore } from '../../store/themeStore';
-
-type Option = {
-  name: string;
-  score: number;
-};
+import { useDecisionStore } from '../../store/decisionStore';
 
 export function DecisionConfidence() {
   const navigate = useNavigate();
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const [confidence, setConfidence] = useState(50);
-  const [selectedOption, setSelectedOption] = useState<string>('');
+  const [confidenceNotes, setConfidenceNotes] = useState('');
+  
+  // Get actual data from stores
+  const options = useDecisionStore((state) => state.options);
+  const priorities = JSON.parse(localStorage.getItem('priorities') || '[]');
 
-  // Mock data - in a real app, this would come from your state management
-  const options: Option[] = [
-    { name: 'Option 1', score: 75 },
-    { name: 'Option 2', score: 60 },
-    { name: 'Option 3', score: 45 }
-  ];
+  // If no options available, redirect back
+  if (options.length === 0) {
+    navigate('/explore-options');
+    return null;
+  }
+
+  const calculateWeightedScore = (option: any) => {
+    // Calculate short-term impact score (25% weight)
+    const shortTermScore = option.shortTerm.length > 0
+      ? option.shortTerm.reduce((sum: any, impact: any) => sum + (impact.weight || 3), 0) / option.shortTerm.length
+      : 3;
+    
+    // Calculate long-term impact score (15% weight)  
+    const longTermScore = option.longTerm.length > 0
+      ? option.longTerm.reduce((sum: any, impact: any) => sum + (impact.weight || 3), 0) / option.longTerm.length
+      : 3;
+    
+    // Calculate risk score (60% penalty - negative impact)
+    const riskScore = option.risks.length > 0
+      ? option.risks.reduce((sum: any, risk: any) => sum + (risk.weight || 3), 0) / option.risks.length
+      : 3;
+    
+    // New weighted calculation with your specified weights
+    const totalScore = (
+      (shortTermScore * 0.25) +    // 25% - Short-term benefits
+      (longTermScore * 0.15) -     // 15% - Long-term benefits  
+      (riskScore * 0.60)           // 60% - Risk penalty (major factor)
+    );
+    
+    // Convert to percentage, ensuring it doesn't go below 0
+    const percentage = Math.max(0, Math.round(((totalScore + 3) / 6) * 100)); // Adjusted scale
+    return Math.min(100, percentage);
+  };
 
   const getBestOption = () => {
+    if (options.length === 0) return null;
+    
     return options.reduce((prev, current) => 
-      (prev.score > current.score) ? prev : current
+      (calculateWeightedScore(prev) > calculateWeightedScore(current)) ? prev : current
     );
   };
 
   const bestOption = getBestOption();
 
+  const getScoreColor = (score: number) => {
+    if (score >= 70) return 'bg-green-500';
+    if (score >= 50) return 'bg-yellow-500';
+    if (score >= 30) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 70) return 'Low Risk, Good Choice';
+    if (score >= 50) return 'Moderate Risk';
+    if (score >= 30) return 'High Risk';
+    return 'Very High Risk';
+  };
+
+  const getDetailedBreakdown = (option: any) => {
+    const shortTerm = option.shortTerm.length > 0
+      ? option.shortTerm.reduce((sum: any, impact: any) => sum + (impact.weight || 3), 0) / option.shortTerm.length
+      : 3;
+    
+    const longTerm = option.longTerm.length > 0
+      ? option.longTerm.reduce((sum: any, impact: any) => sum + (impact.weight || 3), 0) / option.longTerm.length
+      : 3;
+    
+    const risks = option.risks.length > 0
+      ? option.risks.reduce((sum: any, risk: any) => sum + (risk.weight || 3), 0) / option.risks.length
+      : 3;
+
+    return { shortTerm, longTerm, risks };
+  };
+
   return (
     <div className={`max-w-2xl mx-auto p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
       <h1 className={`text-3xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-        Decision Confidence
+        Decision Confidence Analysis
       </h1>
       
       <div className={`space-y-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
         <div className="space-y-4">
           <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-            Analysis Summary
+            Risk-Weighted Analysis Results
           </h2>
           
+          <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'} border-l-4 border-blue-500`}>
+            <h3 className={`font-medium mb-2 ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+              Scoring Methodology (Risk-Focused)
+            </h3>
+            <ul className={`text-sm space-y-1 ${isDarkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+              <li>• <strong>Risk Factor: 60% penalty</strong> (Major consideration)</li>
+              <li>• Short-term Impact: 25% weight</li>
+              <li>• Long-term Impact: 15% weight</li>
+              <li className="text-xs italic">Higher scores = Lower risk, better choice</li>
+            </ul>
+          </div>
+          
           <div className="space-y-4">
-            {options.map((option) => (
-              <div
-                key={option.name}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  option.name === bestOption.name
-                    ? isDarkMode 
-                      ? 'border-purple-500 bg-gray-700'
-                      : 'border-purple-500 bg-purple-50'
-                    : isDarkMode
-                      ? 'border-gray-600 bg-gray-700'
-                      : 'border-gray-200 bg-white'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className={`font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                    {option.name}
-                  </h3>
-                  <span className={`text-xl font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
-                    {option.score}%
-                  </span>
-                </div>
-                {option.name === bestOption.name && (
-                  <div className={`mt-2 text-sm ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
-                    Recommended Choice
+            {options.map((option, index) => {
+              const score = calculateWeightedScore(option);
+              const breakdown = getDetailedBreakdown(option);
+              const isRecommended = bestOption && option.text === bestOption.text;
+              
+              return (
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    isRecommended
+                      ? isDarkMode 
+                        ? 'border-green-500 bg-green-900/20'
+                        : 'border-green-500 bg-green-50'
+                      : isDarkMode
+                        ? 'border-gray-600 bg-gray-700'
+                        : 'border-gray-200 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className={`font-medium text-lg ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                      {option.text || `Option ${index + 1}`}
+                    </h3>
+                    <div className="text-right">
+                      <div className={`text-2xl font-bold ${
+                        isRecommended 
+                          ? isDarkMode ? 'text-green-400' : 'text-green-600'
+                          : isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                      }`}>
+                        {score}%
+                      </div>
+                      <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {getScoreLabel(score)}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+                  
+                  <div className="mb-3">
+                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full ${getScoreColor(score)} transition-all duration-500`}
+                        style={{ width: `${score}%` }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {isRecommended && (
+                    <div className={`flex items-center justify-center py-2 px-4 rounded-md ${
+                      isDarkMode ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-800'
+                    }`}>
+                      <span className="text-sm font-medium">🏆 Lowest Risk Option</span>
+                    </div>
+                  )}
+                  
+                  {/* Detailed breakdown with new weights */}
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                    <div className={`p-2 rounded ${isDarkMode ? 'bg-green-900/30' : 'bg-green-100'}`}>
+                      <div className={`${isDarkMode ? 'text-green-300' : 'text-green-700'} font-medium`}>
+                        Short-term (25%)
+                      </div>
+                      <div className="font-bold text-lg">
+                        {Math.round(breakdown.shortTerm * 10) / 10}/5
+                      </div>
+                    </div>
+                    <div className={`p-2 rounded ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
+                      <div className={`${isDarkMode ? 'text-blue-300' : 'text-blue-700'} font-medium`}>
+                        Long-term (15%)
+                      </div>
+                      <div className="font-bold text-lg">
+                        {Math.round(breakdown.longTerm * 10) / 10}/5
+                      </div>
+                    </div>
+                    <div className={`p-2 rounded ${isDarkMode ? 'bg-red-900/30' : 'bg-red-100'}`}>
+                      <div className={`${isDarkMode ? 'text-red-300' : 'text-red-700'} font-medium`}>
+                        Risk (60% penalty)
+                      </div>
+                      <div className="font-bold text-lg">
+                        {Math.round(breakdown.risks * 10) / 10}/5
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -78,9 +204,12 @@ export function DecisionConfidence() {
             Your Confidence Level
           </h2>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span>Not Confident</span>
+              <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {confidence}% Confident
+              </span>
               <span>Very Confident</span>
             </div>
             
@@ -94,29 +223,54 @@ export function DecisionConfidence() {
             />
             
             <div className="text-center">
-              <span className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {confidence}%
-              </span>
+              <div className={`inline-flex items-center px-4 py-2 rounded-full ${
+                confidence >= 70 
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                  : confidence >= 40
+                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
+                    : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+              }`}>
+                {confidence >= 70 ? '😊 High Confidence' : 
+                 confidence >= 40 ? '😐 Moderate Confidence' : 
+                 '😟 Low Confidence'}
+              </div>
             </div>
           </div>
         </div>
         
         <div className="space-y-4">
           <label className="block">
-            <span className={`block font-medium mb-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+            <span className={`block font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               What would help increase your confidence?
             </span>
             <textarea
-              className={`w-full px-4 py-2 rounded-md border ${
+              value={confidenceNotes}
+              onChange={(e) => setConfidenceNotes(e.target.value)}
+              className={`w-full px-4 py-3 rounded-md border ${
                 isDarkMode 
                   ? 'bg-gray-700 border-gray-600 text-white' 
                   : 'bg-white border-gray-300 text-gray-900'
               } focus:ring-2 focus:ring-purple-500`}
               rows={4}
-              placeholder="What additional information or analysis would help?"
+              placeholder="Additional research needed, expert consultation, more time to think, risk mitigation strategies..."
             />
           </label>
         </div>
+
+        {bestOption && (
+          <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-purple-900/20 border-purple-500' : 'bg-purple-50 border-purple-200'} border`}>
+            <h3 className={`font-semibold mb-2 ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
+              🎯 Risk-Based Recommendation
+            </h3>
+            <p className={`text-sm ${isDarkMode ? 'text-purple-200' : 'text-purple-700'}`}>
+              Based on your risk-weighted analysis, <strong>"{bestOption.text}"</strong> scores {calculateWeightedScore(bestOption)}%. 
+              This recommendation heavily considers potential risks (60% weight) alongside short-term (25%) and long-term (15%) impacts.
+            </p>
+            <div className={`mt-2 text-xs ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>
+              💡 <em>Lower risk options are prioritized in this analysis</em>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="mt-8 flex justify-between">
@@ -136,7 +290,7 @@ export function DecisionConfidence() {
           onClick={() => navigate('/make-decision')}
           className="flex items-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
-          Next Step
+          Make Final Decision
           <ArrowRight className="ml-2 w-5 h-5" />
         </button>
       </div>
