@@ -1,70 +1,44 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
-import { useThemeStore } from '../../store/themeStore';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useDecisionStore } from '../../store/decisionStore';
+import { useThemeStore } from '../../store/themeStore';
 
-export function DecisionConfidence() {
+export default function DecisionConfidence() {
   const navigate = useNavigate();
-  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const { options, bestOption } = useDecisionStore();
+  const { isDarkMode } = useThemeStore();
   const [confidence, setConfidence] = useState(50);
   const [confidenceNotes, setConfidenceNotes] = useState('');
-  
-  // Get actual data from stores
-  const options = useDecisionStore((state) => state.options);
-  const priorities = JSON.parse(localStorage.getItem('priorities') || '[]');
 
-  // If no options available, redirect back
-  if (options.length === 0) {
-    navigate('/explore-options');
-    return null;
-  }
-
-  const calculateWeightedAverage = (impacts: { text: string; weight: number }[]) => {
-    const validImpacts = impacts.filter(impact => impact.text.trim() !== '');
-    if (validImpacts.length === 0) return 3; // Default neutral score
-    
-    const totalWeight = validImpacts.reduce((sum, impact) => sum + impact.weight, 0);
-    return totalWeight / validImpacts.length;
+  const calculateWeightedAverage = (items: any[]) => {
+    const validItems = items.filter(item => item.text.trim() && item.rating > 0);
+    if (validItems.length === 0) return 0;
+    return validItems.reduce((sum, item) => sum + item.rating, 0) / validItems.length;
   };
 
   const calculateWeightedScore = (option: any) => {
-    // Calculate weighted averages for each category
-    const shortTermAvg = calculateWeightedAverage(option.shortTerm);
-    const longTermAvg = calculateWeightedAverage(option.longTerm);
-    const riskAvg = calculateWeightedAverage(option.risks);
+    const shortTerm = calculateWeightedAverage(option.shortTerm);
+    const longTerm = calculateWeightedAverage(option.longTerm);
+    const risks = calculateWeightedAverage(option.risks);
     
-    // Apply the specified weights: Short-term 25%, Long-term 15%, Risk 60% penalty
-    const totalScore = (
-      (shortTermAvg * 0.25) +    // 25% - Short-term benefits
-      (longTermAvg * 0.15) -     // 15% - Long-term benefits  
-      (riskAvg * 0.60)           // 60% - Risk penalty (major factor)
-    );
+    // Risk-weighted formula: prioritize lower risk
+    // Short-term: 25%, Long-term: 15%, Risk penalty: 60%
+    const riskPenalty = (5 - risks) / 5; // Invert risk (higher risk = lower score)
+    const score = (shortTerm * 0.25 + longTerm * 0.15) * 20 + (riskPenalty * 60);
     
-    // Convert to percentage, ensuring it doesn't go below 0
-    const percentage = Math.max(0, Math.round(((totalScore + 3) / 6) * 100)); // Adjusted scale
-    return Math.min(100, percentage);
+    return Math.max(0, Math.min(100, Math.round(score)));
   };
-
-  const getBestOption = () => {
-    if (options.length === 0) return null;
-    
-    return options.reduce((prev, current) => 
-      (calculateWeightedScore(prev) > calculateWeightedScore(current)) ? prev : current
-    );
-  };
-
-  const bestOption = getBestOption();
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return 'bg-green-500';
-    if (score >= 50) return 'bg-yellow-500';
-    if (score >= 30) return 'bg-orange-500';
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-yellow-500';
+    if (score >= 40) return 'bg-orange-500';
     return 'bg-red-500';
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 70) return 'Low Risk, Good Choice';
+    if (score >= 80) return 'Low Risk, Good Choice';
     if (score >= 50) return 'Moderate Risk';
     if (score >= 30) return 'High Risk';
     return 'Very High Risk';
@@ -284,3 +258,5 @@ export function DecisionConfidence() {
     </div>
   );
 }
+
+export { DecisionConfidence }
