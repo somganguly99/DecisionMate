@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Share2, X } from 'lucide-react';
 import { useThemeStore } from '../../store/themeStore';
+import { useDecisionStore } from '../../store/decisionStore';
 import Confetti from 'react-confetti';
 import {
   FacebookShareButton,
@@ -19,6 +20,7 @@ import {
 export function MakeDecision() {
   const navigate = useNavigate();
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const options = useDecisionStore((state) => state.options);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCelebrationModal, setShowCelebrationModal] = useState(false);
@@ -93,9 +95,11 @@ Best regards`;
                 } focus:ring-2 focus:ring-purple-500`}
               >
                 <option value="">Select your decision</option>
-                <option value="option1">Option 1</option>
-                <option value="option2">Option 2</option>
-                <option value="option3">Option 3</option>
+                {options.map((option, index) => (
+                  <option key={index} value={option.text}>
+                    {option.text || `Option ${index + 1}`}
+                  </option>
+                ))}
               </select>
             </label>
             
@@ -138,7 +142,14 @@ Best regards`;
         <div className="mt-8 space-y-4">
           <button
             onClick={handleFinalize}
-            className="w-full flex items-center justify-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            disabled={!finalDecision || !reasoning || !nextSteps}
+            className={`w-full flex items-center justify-center px-6 py-3 rounded-lg transition-colors ${
+              finalDecision && reasoning && nextSteps
+                ? 'bg-purple-600 text-white hover:bg-purple-700'
+                : isDarkMode
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
           >
             <Check className="w-5 h-5 mr-2" />
             Finalize Decision
@@ -153,7 +164,7 @@ Best regards`;
             } transition-colors`}
           >
             <Share2 className="w-5 h-5 mr-2" />
-            Share Decision
+            Share DecisionMate
           </button>
           
           <button
@@ -172,13 +183,23 @@ Best regards`;
 
       {/* Celebration Modal */}
       {showCelebrationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`p-8 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} max-w-md w-full mx-4 text-center`}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`p-8 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} max-w-md w-full text-center shadow-2xl transform animate-pulse`}>
+            <div className="text-6xl mb-4">🎉</div>
             <h3 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              🎉 Congratulations on Making Your Decision!
+              Congratulations!
             </h3>
-            <p className={`mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              You've taken a thoughtful approach to this decision. Your careful analysis and consideration will lead to better outcomes. Time to put your plan into action!
+            <div className="text-4xl mb-4">🚀</div>
+            <p className={`mb-6 text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              You've successfully made your decision using a structured, thoughtful approach!
+            </p>
+            <div className={`p-4 rounded-lg mb-6 ${isDarkMode ? 'bg-purple-900/30' : 'bg-purple-50'}`}>
+              <p className={`font-semibold text-lg ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
+                Your Decision: "{finalDecision}"
+              </p>
+            </div>
+            <p className={`mb-6 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Your careful analysis and consideration will lead to better outcomes. Time to put your plan into action!
             </p>
             <div className="space-y-3">
               <button
@@ -186,9 +207,9 @@ Best regards`;
                   setShowCelebrationModal(false);
                   setShowShareModal(true);
                 }}
-                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 font-semibold transform hover:scale-105 transition-all"
               >
-                🚀 Share Your Success!
+                🎊 Share Your Success!
               </button>
               <button
                 onClick={handleCloseCelebration}
@@ -196,7 +217,7 @@ Best regards`;
                   isDarkMode 
                     ? 'bg-gray-700 text-white hover:bg-gray-600' 
                     : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                }`}
+                } transition-colors`}
               >
                 Return to Home
               </button>
@@ -207,8 +228,8 @@ Best regards`;
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} max-w-md w-full mx-4`}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} max-w-md w-full`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 🎉 Share Your Decision Success!
