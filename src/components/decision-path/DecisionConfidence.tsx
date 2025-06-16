@@ -264,7 +264,7 @@ export function DecisionConfidence() {
             </h3>
             <p className={`text-sm ${isDarkMode ? 'text-purple-200' : 'text-purple-700'}`}>
               Based on your risk-weighted analysis, <strong>"{bestOption.text}"</strong> scores {calculateWeightedScore(bestOption)}%. 
-              This recommendation heavily considers potential risks (60% weight) alongside short-term (25%) and long-term (15%) impacts.
+              This recommendation heavily considers potential risks alongside short-term and long-term impacts.
             </p>
             <div className={`mt-2 text-xs ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>
               💡 <em>Lower risk options are prioritized in this analysis</em>
