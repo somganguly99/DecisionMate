@@ -1,53 +1,89 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { useDecisionStore } from '../../store/decisionStore';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { useThemeStore } from '../../store/themeStore';
+import { useDecisionStore } from '../../store/decisionStore';
 
-export default function DecisionConfidence() {
+export function DecisionConfidence() {
   const navigate = useNavigate();
-  const { options, bestOption } = useDecisionStore();
-  const { isDarkMode } = useThemeStore();
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const [confidence, setConfidence] = useState(50);
   const [confidenceNotes, setConfidenceNotes] = useState('');
+  
+  // Get actual data from stores
+  const options = useDecisionStore((state) => state.options);
+  const priorities = JSON.parse(localStorage.getItem('priorities') || '[]');
 
-  const calculateWeightedAverage = (items: any[]) => {
-    const validItems = items.filter(item => item.text.trim() && item.rating > 0);
-    if (validItems.length === 0) return 0;
-    return validItems.reduce((sum, item) => sum + item.rating, 0) / validItems.length;
-  };
+  // If no options available, redirect back
+  if (options.length === 0) {
+    navigate('/explore-options');
+    return null;
+  }
 
   const calculateWeightedScore = (option: any) => {
-    const shortTerm = calculateWeightedAverage(option.shortTerm);
-    const longTerm = calculateWeightedAverage(option.longTerm);
-    const risks = calculateWeightedAverage(option.risks);
+    // Calculate short-term impact score (25% weight)
+    const shortTermScore = option.shortTerm.length > 0
+      ? option.shortTerm.reduce((sum: any, impact: any) => sum + (impact.weight || 3), 0) / option.shortTerm.length
+      : 3;
     
-    // Risk-weighted formula: prioritize lower risk
-    // Short-term: 25%, Long-term: 15%, Risk penalty: 60%
-    const riskPenalty = (5 - risks) / 5; // Invert risk (higher risk = lower score)
-    const score = (shortTerm * 0.25 + longTerm * 0.15) * 20 + (riskPenalty * 60);
+    // Calculate long-term impact score (15% weight)  
+    const longTermScore = option.longTerm.length > 0
+      ? option.longTerm.reduce((sum: any, impact: any) => sum + (impact.weight || 3), 0) / option.longTerm.length
+      : 3;
     
-    return Math.max(0, Math.min(100, Math.round(score)));
+    // Calculate risk score (60% penalty - negative impact)
+    const riskScore = option.risks.length > 0
+      ? option.risks.reduce((sum: any, risk: any) => sum + (risk.weight || 3), 0) / option.risks.length
+      : 3;
+    
+    // New weighted calculation with your specified weights
+    const totalScore = (
+      (shortTermScore * 0.25) +    // 25% - Short-term benefits
+      (longTermScore * 0.15) -     // 15% - Long-term benefits  
+      (riskScore * 0.60)           // 60% - Risk penalty (major factor)
+    );
+    
+    // Convert to percentage, ensuring it doesn't go below 0
+    const percentage = Math.max(0, Math.round(((totalScore + 3) / 6) * 100)); // Adjusted scale
+    return Math.min(100, percentage);
   };
 
+  const getBestOption = () => {
+    if (options.length === 0) return null;
+    
+    return options.reduce((prev, current) => 
+      (calculateWeightedScore(prev) > calculateWeightedScore(current)) ? prev : current
+    );
+  };
+
+  const bestOption = getBestOption();
+
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-yellow-500';
-    if (score >= 40) return 'bg-orange-500';
+    if (score >= 70) return 'bg-green-500';
+    if (score >= 50) return 'bg-yellow-500';
+    if (score >= 30) return 'bg-orange-500';
     return 'bg-red-500';
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 80) return 'Low Risk, Good Choice';
+    if (score >= 70) return 'Low Risk, Good Choice';
     if (score >= 50) return 'Moderate Risk';
     if (score >= 30) return 'High Risk';
     return 'Very High Risk';
   };
 
   const getDetailedBreakdown = (option: any) => {
-    const shortTerm = calculateWeightedAverage(option.shortTerm);
-    const longTerm = calculateWeightedAverage(option.longTerm);
-    const risks = calculateWeightedAverage(option.risks);
+    const shortTerm = option.shortTerm.length > 0
+      ? option.shortTerm.reduce((sum: any, impact: any) => sum + (impact.weight || 3), 0) / option.shortTerm.length
+      : 3;
+    
+    const longTerm = option.longTerm.length > 0
+      ? option.longTerm.reduce((sum: any, impact: any) => sum + (impact.weight || 3), 0) / option.longTerm.length
+      : 3;
+    
+    const risks = option.risks.length > 0
+      ? option.risks.reduce((sum: any, risk: any) => sum + (risk.weight || 3), 0) / option.risks.length
+      : 3;
 
     return { shortTerm, longTerm, risks };
   };
@@ -64,6 +100,7 @@ export default function DecisionConfidence() {
             Risk-Weighted Analysis Results
           </h2>
           
+        
           <div className="space-y-4">
             {options.map((option, index) => {
               const score = calculateWeightedScore(option);
@@ -118,7 +155,7 @@ export default function DecisionConfidence() {
                     </div>
                   )}
                   
-                  {/* Detailed breakdown with weighted averages */}
+                  {/* Detailed breakdown with new weights */}
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                     <div className={`p-2 rounded ${isDarkMode ? 'bg-green-900/30' : 'bg-green-100'}`}>
                       <div className={`${isDarkMode ? 'text-green-300' : 'text-green-700'} font-medium`}>
@@ -126,9 +163,6 @@ export default function DecisionConfidence() {
                       </div>
                       <div className="font-bold text-lg">
                         {Math.round(breakdown.shortTerm * 10) / 10}/5
-                      </div>
-                      <div className={`text-xs ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                        Avg of {option.shortTerm.filter(i => i.text.trim()).length} items
                       </div>
                     </div>
                     <div className={`p-2 rounded ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
@@ -138,9 +172,6 @@ export default function DecisionConfidence() {
                       <div className="font-bold text-lg">
                         {Math.round(breakdown.longTerm * 10) / 10}/5
                       </div>
-                      <div className={`text-xs ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                        Avg of {option.longTerm.filter(i => i.text.trim()).length} items
-                      </div>
                     </div>
                     <div className={`p-2 rounded ${isDarkMode ? 'bg-red-900/30' : 'bg-red-100'}`}>
                       <div className={`${isDarkMode ? 'text-red-300' : 'text-red-700'} font-medium`}>
@@ -148,9 +179,6 @@ export default function DecisionConfidence() {
                       </div>
                       <div className="font-bold text-lg">
                         {Math.round(breakdown.risks * 10) / 10}/5
-                      </div>
-                      <div className={`text-xs ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-                        Avg of {option.risks.filter(i => i.text.trim()).length} items
                       </div>
                     </div>
                   </div>
@@ -225,7 +253,7 @@ export default function DecisionConfidence() {
             </h3>
             <p className={`text-sm ${isDarkMode ? 'text-purple-200' : 'text-purple-700'}`}>
               Based on your risk-weighted analysis, <strong>"{bestOption.text}"</strong> scores {calculateWeightedScore(bestOption)}%. 
-              This recommendation heavily considers potential risks alongside short-term  and long-term impacts.
+              This recommendation heavily considers potential risks alongside short-term and long-term impacts.
             </p>
             <div className={`mt-2 text-xs ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>
               💡 <em>Lower risk options are prioritized in this analysis</em>
@@ -258,5 +286,3 @@ export default function DecisionConfidence() {
     </div>
   );
 }
-
-export { DecisionConfidence }
