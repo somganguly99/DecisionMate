@@ -159,7 +159,7 @@ export function DecisionConfidence() {
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                     <div className={`p-2 rounded ${isDarkMode ? 'bg-green-900/30' : 'bg-green-100'}`}>
                       <div className={`${isDarkMode ? 'text-green-300' : 'text-green-700'} font-medium`}>
-                        Short-term (25%)
+                        Short-term 
                       </div>
                       <div className="font-bold text-lg">
                         {Math.round(breakdown.shortTerm * 10) / 10}/5
@@ -167,7 +167,7 @@ export function DecisionConfidence() {
                     </div>
                     <div className={`p-2 rounded ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
                       <div className={`${isDarkMode ? 'text-blue-300' : 'text-blue-700'} font-medium`}>
-                        Long-term (15%)
+                        Long-term 
                       </div>
                       <div className="font-bold text-lg">
                         {Math.round(breakdown.longTerm * 10) / 10}/5
@@ -175,7 +175,7 @@ export function DecisionConfidence() {
                     </div>
                     <div className={`p-2 rounded ${isDarkMode ? 'bg-red-900/30' : 'bg-red-100'}`}>
                       <div className={`${isDarkMode ? 'text-red-300' : 'text-red-700'} font-medium`}>
-                        Risk (60% penalty)
+                        Risks 
                       </div>
                       <div className="font-bold text-lg">
                         {Math.round(breakdown.risks * 10) / 10}/5
